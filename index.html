@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Collection</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: monospace;
+      background: #111;
+      color: white;
+      padding: 2rem;
+    }
+    .theme-day { --bg: white; --text: black; }
+    .theme-night { --bg: #1a1a2e; --text: #eee; }
+    .theme-blue { --bg: #001f3f; --text: #cce7ff; }
+    body.theme-day, body.theme-night, body.theme-blue {
+      background-color: var(--bg);
+      color: var(--text);
+    }
+    select, button {
+      background-color: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--text);
+    }
+  </style>
+  <script>
+    function setTheme(theme) {
+      document.body.className = theme;
+      localStorage.setItem('theme', theme);
+    }
+    function initTheme() {
+      const theme = localStorage.getItem('theme') || 'theme-day';
+      setTheme(theme);
+    }
+  </script>
+</head>
+<body onload="initTheme()" class="theme-day">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">🎮 Retro Collection</h1>
+    <div class="flex space-x-2 text-xl">
+      <button onclick="setTheme('theme-day')" class="px-3 py-2 rounded-xl shadow">☀️</button>
+      <button onclick="setTheme('theme-night')" class="px-3 py-2 rounded-xl shadow">🌙</button>
+      <button onclick="setTheme('theme-blue')" class="px-3 py-2 rounded-xl shadow">💧</button>
+    </div>
+  </div>
+
+  <div class="mb-4 flex flex-wrap gap-2" id="platform-buttons"></div>
+  <div class="flex items-center justify-between mb-4">
+    <select id="genre-dropdown" class="p-2 rounded-xl border"></select>
+    <button id="toggle-view" class="px-3 py-1 rounded-xl shadow border">🔁 Toggle View</button>
+  </div>
+  <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+
+  <script>
+    const platformButtons = document.getElementById('platform-buttons');
+    const gameGrid = document.getElementById('game-grid');
+    const genreDropdown = document.getElementById('genre-dropdown');
+    const toggleButton = document.getElementById('toggle-view');
+
+    const platforms = ['psx','snes','gba','gbc','gb','nes','n64','gc','psp','dc','md','nds'];
+    let allGames = [];
+    let currentView = 'grid';
+
+    async function init() {
+      for (const platform of platforms) {
+        try {
+          const res = await fetch(`data/${platform}.json`);
+          if (res.ok) {
+            const btn = document.createElement('button');
+            btn.textContent = platform.toUpperCase();
+            btn.className = 'px-3 py-1 rounded-xl shadow border';
+            btn.onclick = () => loadGames(`data/${platform}.json`);
+            platformButtons.appendChild(btn);
+          }
+        } catch {}
+      }
+    }
+
+    function populateGenres(games) {
+      const genres = [...new Set(games.map(g => g.genre?.split(',')[0]).filter(Boolean))];
+      genreDropdown.innerHTML = '<option value="all">All Genres</option>' +
+        genres.map(g => `<option value="${g}">${g}</option>`).join('');
+    }
+
+    function extractYear(date) {
+      if (!date) return '';
+      const match = date.match(/\d{4}/);
+      return match ? match[0] : '';
+    }
+
+    function loadGames(jsonPath) {
+      fetch(jsonPath)
+        .then(res => res.json())
+        .then(data => {
+          allGames = data;
+          populateGenres(allGames);
+          displayGames();
+        });
+    }
+
+    function displayGames() {
+      const selected = genreDropdown.value;
+      gameGrid.innerHTML = '';
+      const filtered = allGames.filter(game => selected === 'all' || game.genre?.includes(selected));
+      gameGrid.className = currentView === 'grid'
+        ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+        : 'flex flex-col gap-4';
+
+      for (const game of filtered) {
+        const imgSrc = encodeURI(game.image);
+        const year = extractYear(game.release_date);
+        const genre = game.genre?.split(',')[0] || '';
+        const card = document.createElement('div');
+        card.className = 'border rounded-xl p-4 shadow bg-[var(--bg)] text-[var(--text)] flex ' + (currentView === 'grid' ? 'flex-col' : 'flex-row gap-4');
+        card.innerHTML = `
+          <img src="${imgSrc}" alt="${game.title}" class="${currentView === 'grid' ? 'w-full h-48' : 'w-24 h-24'} object-cover rounded-xl border mb-2" />
+          <div>
+            <h2 class="font-bold text-sm">${game.title} (${year})</h2>
+            <p class="text-xs">${game.developer} - ${game.publisher}</p>
+            <p class="text-xs mt-1">${genre}</p>
+          </div>
+        `;
+        gameGrid.appendChild(card);
+      }
+    }
+
+    toggleButton.addEventListener('click', () => {
+      currentView = currentView === 'grid' ? 'list' : 'grid';
+      displayGames();
+    });
+
+    genreDropdown.addEventListener('change', displayGames);
+    init();
+  </script>
+</body>
+</html>
