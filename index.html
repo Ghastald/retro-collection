@@ -2,16 +2,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Retro Collection</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: monospace;
+      font-family: 'VT323', monospace;
       background: #111;
       color: white;
-      padding: 2rem;
+      padding: 1rem;
     }
     .theme-day { --bg: white; --text: black; }
     .theme-night { --bg: #1a1a2e; --text: #eee; }
@@ -38,7 +39,7 @@
   </script>
 </head>
 <body onload="initTheme()" class="theme-day">
-  <div class="flex justify-between items-center mb-6">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
     <h1 class="text-2xl font-bold">🎮 Retro Collection</h1>
     <div class="flex space-x-2 text-xl">
       <button onclick="setTheme('theme-day')" class="px-3 py-2 rounded-xl shadow">☀️</button>
@@ -48,9 +49,9 @@
   </div>
 
   <div class="mb-4 flex flex-wrap gap-2" id="platform-buttons"></div>
-  <div class="flex items-center justify-between mb-4">
-    <select id="genre-dropdown" class="p-2 rounded-xl border"></select>
-    <button id="toggle-view" class="px-3 py-1 rounded-xl shadow border">🔁 Toggle View</button>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+    <select id="genre-dropdown" class="p-2 rounded-xl border w-full sm:w-auto"></select>
+    <button id="toggle-view" class="px-3 py-2 rounded-xl shadow border text-sm w-full sm:w-auto">🔁 Toggle View</button>
   </div>
   <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
 
@@ -118,9 +119,10 @@
         card.innerHTML = `
           <img src="${imgSrc}" alt="${game.title}" class="${currentView === 'grid' ? 'w-full h-48' : 'w-24 h-24'} object-cover rounded-xl border mb-2" />
           <div>
-            <h2 class="font-bold text-sm">${game.title} (${year})</h2>
-            <p class="text-xs">${game.developer} - ${game.publisher}</p>
-            <p class="text-xs mt-1">${genre}</p>
+            <h2 class="font-bold text-base">${game.title} (${year})</h2>
+            <p class="text-sm">${game.developer} - ${game.publisher}</p>
+            <p class="text-sm mt-1">${genre}</p>
+            ${currentView === 'list' ? `<p class="text-sm mt-2">${game.synopsis || ''}</p>` : ''}
           </div>
         `;
         gameGrid.appendChild(card);
